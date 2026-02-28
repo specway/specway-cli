@@ -1,0 +1,189 @@
+openapi: "3.0.3"
+info:
+  title: Petstore
+  description: A sample Petstore API - Version 2 with breaking changes
+  version: "2.0.0"
+  contact:
+    name: Petstore Team
+    email: team@petstore.io
+
+servers:
+  - url: https://petstore.swagger.io/v2
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+        - species
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        species:
+          type: string
+        status:
+          type: string
+          enum:
+            - available
+            - pending
+            - sold
+            - adopted
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+
+security:
+  - BearerAuth: []
+
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      summary: List all pets
+      description: Returns all pets from the system with filtering
+      tags:
+        - Pets
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: species
+          in: query
+          description: Filter by species
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by status
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of pets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Pet"
+                  total:
+                    type: integer
+
+    post:
+      operationId: createPet
+      summary: Create a pet
+      description: Creates a new pet in the store
+      tags:
+        - Pets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - species
+              properties:
+                name:
+                  type: string
+                species:
+                  type: string
+                tag:
+                  type: string
+      responses:
+        "201":
+          description: Pet created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+
+  /pets/{petId}:
+    get:
+      operationId: getPet
+      summary: Get a pet by ID
+      description: Returns a single pet
+      tags:
+        - Pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: A pet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+
+  # Note: DELETE /pets/{petId} has been removed (breaking change)
+
+  /pets/{petId}/adopt:
+    post:
+      operationId: adoptPet
+      summary: Adopt a pet
+      description: Mark a pet as adopted
+      tags:
+        - Pets
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - adopterName
+              properties:
+                adopterName:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Pet adopted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
